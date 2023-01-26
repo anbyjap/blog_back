@@ -5,12 +5,18 @@ The backend for my blog website
 ## prerequirements
 
 - poetry
+- docker
 
 ## libralies
 
 - fastapi
 - sqlalchemy
 - postgres DB (Database)
+
+## set up db
+
+1.  `cd db`
+2.  `Docker-Compose up -d`
 
 ## how to raunch server
 
