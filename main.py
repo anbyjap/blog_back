@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 import crud
@@ -8,7 +9,20 @@ from database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 
+# Define allowed origins (domains) that are allowed to access your API
+origins = ["http://localhost:3000"]
+
+# Create the FastAPI app
 app = FastAPI()
+
+# Add CORS middleware to allow requests from specified origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],  # You can restrict this to specific HTTP methods if needed
+    allow_headers=["*"],  # You can restrict this to specific headers if needed
+)
 
 
 # Dependency
@@ -44,14 +58,14 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.post("/users/{user_id}/items/", response_model=schemas.Item)
-def create_item_for_user(
-    user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
-):
-    return crud.create_user_item(db=db, item=item, user_id=user_id)
+# @app.post("/users/{user_id}/items/", response_model=[schemas.Post])
+# def create_item_for_user(
+#     user_id: int, item: schemas.PostCreate, db: Session = Depends(get_db)
+# ):
+#     return crud.create_user_item(db=db, item=item, user_id=user_id)
 
 
-@app.get("/items/", response_model=list[schemas.Item])
-def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    items = crud.get_items(db, skip=skip, limit=limit)
-    return items
+@app.get("/posts/", response_model=list[schemas.Post])
+def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    posts = crud.get_posts(db, skip=skip, limit=limit)
+    return posts
