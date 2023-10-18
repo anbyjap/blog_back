@@ -1,0 +1,31 @@
+version: "3"
+
+services:
+  db:
+    image: postgres:14
+    container_name: postgres
+    command: -c 'config_file=/etc/postgresql/postgresql.conf'
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/db-store:/var/lib/postgresql/data
+      - ./db/script:/docker-entrypoint-initdb.d
+      - ./db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+    environment:
+      # - POSTGRES_DB=blog
+      - POSTGRES_USER=postgres # This is optional; only if you want a different username
+      - POSTGRES_PASSWORD=passw0rd
+
+  api:
+    build: ./api # Build the API service from the ./api directory
+    container_name: api
+    ports:
+      - "8000:8000" # Expose the API on port 8000 (adjust as needed)
+    depends_on:
+      - db # Make sure the API service starts after the database service
+    environment:
+      - DATABASE_URL=postgresql://postgres:passw0rd@db:5432/blog
+      - SECRET_KEY=your_secret_key # Set your API secret key
+
+volumes:
+  db-store:
