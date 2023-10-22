@@ -10,7 +10,7 @@ from database import SessionLocal, engine
 models.Base.metadata.create_all(bind=engine)
 
 # Define allowed origins (domains) that are allowed to access your API
-origins = ["http://localhost:3000"]
+# origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
 # Create the FastAPI app
 app = FastAPI()
@@ -18,7 +18,7 @@ app = FastAPI()
 # Add CORS middleware to allow requests from specified origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],  # You can restrict this to specific HTTP methods if needed
     allow_headers=["*"],  # You can restrict this to specific headers if needed

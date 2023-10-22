@@ -18,6 +18,10 @@ The backend for my blog website
 1.  `cd db`
 2.  `Docker-Compose up -d`
 
+## remove all images, containers, volumes
+
+docker-compose down --rmi all --volumes --remove-orphans
+
 ## how to raunch server
 
 1.  `poetry install`

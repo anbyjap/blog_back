@@ -1,0 +1,16 @@
+# Use the official PostgreSQL image as the base
+FROM --platform=linux/amd64 postgres:14
+
+# Set environment variables (though these can and often should be set at runtime, not build time)
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=passw0rd
+ENV POSTGRES_URL=${BLOG_DB_URL}
+
+# Copy custom configuration if any
+COPY ./config/postgresql.conf /etc/postgresql/postgresql.conf
+
+# Copy initialization scripts (.sql, .sh, etc.)
+COPY ./script /docker-entrypoint-initdb.d/
+
+# The default CMD is already set in the postgres:14 image to run PostgreSQL.
+# Unless you have specific requirements or a custom CMD, there's no need to define it here.
