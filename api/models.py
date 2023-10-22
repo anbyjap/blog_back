@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DATETIME
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, TIMESTAMP
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -29,9 +29,9 @@ class Post(Base):
     is_published = Column(Boolean, default=True)
     like = Column(Integer, index=True)
     dislike = Column(Integer, index=True)
-    created_at = Column(DATETIME)
-    updated_at = Column(DATETIME)
-    published_at = Column(DATETIME)
+    created_at = Column(TIMESTAMP)
+    updated_at = Column(TIMESTAMP)
+    published_at = Column(TIMESTAMP)
 
     user = relationship("User", back_populates="posts")
     post_tags = relationship("PostTag", back_populates="post")  # Corrected attribute name
