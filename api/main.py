@@ -80,3 +80,13 @@ def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
         }
         result_posts.append(result)
     return result_posts
+
+
+@app.delete("/posts/{post_id}/")
+def delete_post(post_id: str, db: Session = Depends(get_db)):
+    db_post = crud.get_post(db, post_id=post_id)
+    if db_post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    db.delete(db_post)
+    db.commit()
+    return {"status": "success", "message": "Post deleted successfully"}

@@ -36,3 +36,8 @@ def create_user_post(db: Session, item: schemas.PostCreate):
     db.commit()
     db.refresh(db_item)
     return db_item
+
+
+def get_post(db: Session, post_id: int):
+    """Retrieve a specific post by its ID."""
+    return db.query(models.Post).filter(models.Post.post_id == post_id).first()
