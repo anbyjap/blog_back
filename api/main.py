@@ -58,14 +58,25 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-# @app.post("/users/{user_id}/items/", response_model=[schemas.Post])
-# def create_item_for_user(
-#     user_id: int, item: schemas.PostCreate, db: Session = Depends(get_db)
-# ):
-#     return crud.create_user_item(db=db, item=item, user_id=user_id)
+@app.post("/users/post/")
+def create_item_for_user(
+    item: schemas.PostCreate, db: Session = Depends(get_db)
+):
+    return crud.create_user_post(db=db, item=item)
 
 
-@app.get("/posts/", response_model=list[schemas.Post])
+@app.get("/posts/", response_model=list[schemas.PostShow])
 def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     posts = crud.get_posts(db, skip=skip, limit=limit)
-    return posts
+    result_posts = []
+    for post in posts:
+        result = {
+            "username": post.user.name,
+            "user_id": post.user_id,
+            "post_id": post.post_id,
+            "title": post.title,
+            "content": post.content,
+            "created_at": post.created_at
+        }
+        result_posts.append(result)
+    return result_posts

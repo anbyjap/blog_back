@@ -1,7 +1,8 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 import models
 import schemas
+import datetime
 
 
 def get_user(db: Session, user_id: int):
@@ -18,7 +19,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: schemas.UserCreate):
     fake_hashed_password = user.password + "notreallyhashed"
-    db_user = models.User(email=user.email, hashed_password=fake_hashed_password)
+    db_user = models.User(user_id=user.user_id, name=user.name, email=user.email, hashed_password=fake_hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -26,11 +27,11 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 
 def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Post).offset(skip).limit(limit).all()
+    return db.query(models.Post).options(joinedload(models.Post.user)).offset(skip).limit(limit).all()
 
 
-def create_user_item(db: Session, item: schemas.PostCreate, user_id: int):
-    db_item = models.Item(**item.dict(), owner_id=user_id)
+def create_user_post(db: Session, item: schemas.PostCreate):
+    db_item = models.Post(**item.dict(), created_at=datetime.datetime.now())
     db.add(db_item)
     db.commit()
     db.refresh(db_item)

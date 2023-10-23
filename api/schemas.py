@@ -1,12 +1,11 @@
 from pydantic import BaseModel
+import datetime
 
 
 class PostBase(BaseModel):
-    post_id: str | None = None
-    user_id: str | None = None
+    post_id: int | None = None
+    user_id: int | None = None
     title: str | None = None
-    description: str | None = None
-    summary: str | None = None
     content: str | None = None
 
 
@@ -14,7 +13,16 @@ class PostCreate(PostBase):
     pass
 
 
+class PostShow(PostBase):
+    username: str
+    created_at: datetime.datetime
+    updated_at: str | None = None
+    published_at: str | None = None
+
+
 class Post(PostBase):
+    description: str | None = None
+    summary: str | None = None
     is_published: str
     slug: str | None = None
     like: str | None = None
@@ -32,6 +40,8 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    user_id: int
+    name: str
     password: str
 
 
