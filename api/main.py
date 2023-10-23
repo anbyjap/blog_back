@@ -76,7 +76,8 @@ def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
             "post_id": post.post_id,
             "title": post.title,
             "content": post.content,
-            "created_at": post.created_at
+            "created_at": post.created_at,
+            "tag_urls": [{"tag_name": post_tag.tag.meta_title, "url": post_tag.tag.icon_image_url} for post_tag in post.post_tags]
         }
         result_posts.append(result)
     return result_posts

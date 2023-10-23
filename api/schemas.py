@@ -1,23 +1,30 @@
 from pydantic import BaseModel
+from typing import List, Dict
 import datetime
 
 
 class PostBase(BaseModel):
-    post_id: int | None = None
-    user_id: int | None = None
+    user_id: str | None = None
     title: str | None = None
     content: str | None = None
 
 
 class PostCreate(PostBase):
-    pass
+    tags: List[str]
+
+
+class TagURL(BaseModel):
+    tag_name: str
+    url: str
 
 
 class PostShow(PostBase):
+    post_id: str | None = None
     username: str
     created_at: datetime.datetime
     updated_at: str | None = None
     published_at: str | None = None
+    tag_urls: List[TagURL] | None = None
 
 
 class Post(PostBase):
@@ -40,13 +47,12 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    user_id: int
     name: str
     password: str
 
 
 class User(UserBase):
-    user_id: int
+    user_id: str
     is_active: bool
     posts: list[Post] = []
 

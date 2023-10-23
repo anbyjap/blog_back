@@ -7,7 +7,7 @@ from database import Base
 class User(Base):
     __tablename__ = "users"
 
-    user_id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, primary_key=True, index=True)
     name = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
@@ -19,8 +19,8 @@ class User(Base):
 class Post(Base):
     __tablename__ = "posts"
 
-    post_id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    post_id = Column(String, primary_key=True, index=True)
+    user_id = Column(String, ForeignKey("users.user_id"))
     title = Column(String, index=True)
     meta_title = Column(String, index=True)
     slug = Column(String, index=True)
@@ -41,9 +41,9 @@ class Post(Base):
 class PostTag(Base):
     __tablename__ = "post_tag"
 
-    post_tag_id = Column(Integer, primary_key=True, index=True)  # Define a primary key column
-    post_id = Column(Integer, ForeignKey("posts.post_id"))
-    tag_id = Column(Integer, ForeignKey("tag.id"))
+    post_tag_id = Column(String, primary_key=True, index=True)  # Define a primary key column
+    post_id = Column(String, ForeignKey("posts.post_id"))
+    tag_id = Column(String, ForeignKey("tag.id"))
 
     post = relationship("Post", back_populates="post_tags")
     tag = relationship("Tag", back_populates="post_tags")
@@ -52,9 +52,10 @@ class PostTag(Base):
 class Tag(Base):
     __tablename__ = "tag"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     title = Column(String, index=True)
     meta_title = Column(String, index=True)
+    icon_image_url = Column(String(500))  # new column for the S3 URL
 
     post_tags = relationship("PostTag", back_populates="tag")
 
@@ -62,7 +63,7 @@ class Tag(Base):
 class PostCategory(Base):
     __tablename__ = "post_category"
 
-    category_id = Column(Integer, primary_key=True, index=True)
+    category_id = Column(String, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey("posts.post_id"))
 
     posts = relationship("Post", back_populates="post_category")

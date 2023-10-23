@@ -12,6 +12,7 @@ uvicorn = {extras = ["standard"], version = "^0.20.0"}
 psycopg2-binary = "^2.9.5"
 sqlalchemy = "^2.0.0"
 psycopg2 = "^2.9.9"
+boto3 = "^1.28.68"
 
 
 [tool.poetry.group.dev.dependencies]
