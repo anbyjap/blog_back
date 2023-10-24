@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session, joinedload
+from typing import Optional
+from sqlalchemy import or_
 
 import models
 import schemas
@@ -20,27 +22,59 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: schemas.UserCreate):
     fake_hashed_password = user.password + "notreallyhashed"
-    db_user = models.User(user_id=uuid.uuid4(), name=user.name, email=user.email, hashed_password=fake_hashed_password)
+    db_user = models.User(
+        user_id=str(uuid.uuid4()),
+        name=user.name,
+        email=user.email,
+        hashed_password=fake_hashed_password
+        )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
     return db_user
 
 
-def get_posts(db: Session, skip: int = 0, limit: int = 100):
-    return (
-        db.query(models.Post)
-        .options(
-            joinedload(models.Post.user),
-            joinedload(models.Post.post_tags).joinedload(models.PostTag.tag)
-        )
-        .offset(skip)
-        .limit(limit)
-        .all()
+def get_posts(
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        category: Optional[str] = None,
+        keyword: Optional[str] = None
+):
+    # Starting the query
+    query = db.query(models.Post).options(
+        joinedload(models.Post.user),
+        joinedload(models.Post.post_tags).joinedload(models.PostTag.tag),
     )
 
+    # Filtering based on category
+    if category:
+        query = query.filter(models.Post.category == category)
+
+    # Filtering based on keyword (searching within title or content)
+    if keyword:
+        query = query.filter(
+            or_(
+                models.Post.title.contains(keyword),
+                models.Post.content.contains(keyword)
+                )
+            )
+
+    # Applying offset and limit
+    posts = query.offset(skip).limit(limit).all()
+
+    return posts
+
+
 def create_user_post(db: Session, item: schemas.PostCreate):
-    db_post = models.Post(post_id=str(uuid.uuid4()), user_id=item.user_id, title=item.title, content=item.content, created_at=datetime.datetime.now())
+    db_post = models.Post(
+        post_id=str(uuid.uuid4()),
+        user_id=item.user_id,
+        title=item.title,
+        content=item.content,
+        created_at=datetime.datetime.now(),
+        category=item.category
+        )
     db.add(db_post)
     db.flush()
 
@@ -50,7 +84,11 @@ def create_user_post(db: Session, item: schemas.PostCreate):
 
         if tag_instance:
             # If it does, add a record in the post_tag table associating the post with the tag
-            post_tag_instance = models.PostTag(post_tag_id=str(uuid.uuid4()), post_id=db_post.post_id, tag_id=tag_instance.id)
+            post_tag_instance = models.PostTag(
+                post_tag_id=str(uuid.uuid4()),
+                post_id=db_post.post_id,
+                tag_id=tag_instance.id
+                )
             db.add(post_tag_instance)
             
     db.commit()

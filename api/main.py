@@ -1,6 +1,8 @@
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from typing import Optional
+
 
 import crud
 import models
@@ -62,12 +64,20 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 def create_item_for_user(
     item: schemas.PostCreate, db: Session = Depends(get_db)
 ):
+    if item.category not in ["tech", "idea"]:
+        raise HTTPException(status_code=400, detail="specify category")
     return crud.create_user_post(db=db, item=item)
 
 
 @app.get("/posts/", response_model=list[schemas.PostShow])
-def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    posts = crud.get_posts(db, skip=skip, limit=limit)
+def read_posts(
+    skip: int = 0,
+    limit: int = 100,
+    category: Optional[str] = None,
+    keyword: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    posts = crud.get_posts(db, skip=skip, limit=limit, category=category, keyword=keyword)
     result_posts = []
     for post in posts:
         result = {
@@ -77,7 +87,8 @@ def read_posts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
             "title": post.title,
             "content": post.content,
             "created_at": post.created_at,
-            "tag_urls": [{"tag_name": post_tag.tag.meta_title, "url": post_tag.tag.icon_image_url} for post_tag in post.post_tags]
+            "tag_urls": [{"tag_name": post_tag.tag.meta_title, "url": post_tag.tag.icon_image_url} for post_tag in post.post_tags],
+            "category": post.category
         }
         result_posts.append(result)
     return result_posts

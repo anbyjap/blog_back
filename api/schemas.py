@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List
 import datetime
 
 
@@ -11,6 +11,7 @@ class PostBase(BaseModel):
 
 class PostCreate(PostBase):
     tags: List[str]
+    category: str
 
 
 class TagURL(BaseModel):
@@ -25,6 +26,7 @@ class PostShow(PostBase):
     updated_at: str | None = None
     published_at: str | None = None
     tag_urls: List[TagURL] | None = None
+    category: str
 
 
 class Post(PostBase):

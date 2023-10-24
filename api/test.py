@@ -34,16 +34,6 @@ post_tag3 = PostTag(post_tag_id=3, post=post2, tag=tag2)
 session.add_all([post_tag1, post_tag2, post_tag3])
 session.commit()  # Commit post tags
 
-# Insert data into the 'categories' table with manually set id
-category1 = Category(id=1, title="Category 1", context="Category 1 Description")
-category2 = Category(id=2, title="Category 2", context="Category 2 Description")
-session.add_all([category1, category2])
-
-# Insert data into the 'post_category' table with manually set category_id
-post_category1 = PostCategory(post_category_id=1,category_id=category1.id, post_id=post1.post_id, categories=category1)
-post_category2 = PostCategory(post_category_id=1,category_id=category2.id, post_id=post2.post_id, categories=category2)
-session.add_all([post_category1, post_category2])
-
 # Commit the changes to the database
 session.commit()
 

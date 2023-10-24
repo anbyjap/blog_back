@@ -26,6 +26,7 @@ CREATE TABLE public.posts (
     "slug" VARCHAR,
     "content" VARCHAR,
     "summary" VARCHAR,
+    "category" VARCHAR,
     "is_published" BOOLEAN DEFAULT TRUE,
     "like" INTEGER,
     "dislike" INTEGER,
@@ -46,27 +47,8 @@ CREATE TABLE public.post_tag (
 -- Create the 'tags' table
 CREATE TABLE public.tag (
     "id" VARCHAR NOT NULL,
-    "tag_id" VARCHAR REFERENCES post_tag ("post_tag_id"),
     "title" VARCHAR,
     "meta_title" VARCHAR,
     "icon_image_url" VARCHAR,
-    PRIMARY KEY ("id")
-);
-
--- Create the 'post_category' table
-CREATE TABLE public.post_category (
-    "post_category_id" VARCHAR NOT NULL,
-    "category_id" VARCHAR NOT NULL,
-    "post_id" VARCHAR REFERENCES posts ("post_id"),
-    PRIMARY KEY ("post_category_id")
-);
-
--- Create the 'categories' table
-CREATE TABLE public.categories (
-    "id" VARCHAR NOT NULL,
-    "category_id" VARCHAR REFERENCES post_category ("post_category_id"),
-    "title" VARCHAR,
-    "meta_title" VARCHAR,
-    "context" VARCHAR,
     PRIMARY KEY ("id")
 );
