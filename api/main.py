@@ -1,9 +1,14 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import Optional
-
-
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
+import base64
+import secrets
+import os
 import crud
 import models
 import schemas
@@ -11,11 +16,75 @@ from database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 
+admin_name = os.environ.get('BLOG_ADMIN_NAME')
+admin_password = os.environ.get('BLOG_ADMIN_PASSWORD')
+swagger_creds = {admin_name: admin_password}
+
+
+app = FastAPI()
+
+# Security
+security = HTTPBasic()
+
+
+def verify_credentials(credentials: HTTPBasicCredentials) -> bool:
+    correct_password = swagger_creds.get(credentials.username)
+    if not correct_password or not secrets.compare_digest(
+        correct_password,
+        credentials.password
+    ):
+        return False
+    return True
+
+
+def get_current_username(
+        credentials: HTTPBasicCredentials = Depends(security)
+) -> str:
+    if not verify_credentials(credentials):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect credentials"
+        )
+    return credentials.username
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # If the request is for the documentation page
+        if request.url.path in ["/docs", "/openapi.json"]:
+            auth = request.headers.get("Authorization")
+            if not auth:
+                response = Response(
+                    headers={"WWW-Authenticate": "Basic"},
+                    status_code=401
+                )
+                return response
+
+            try:
+                # credentials = HTTPBasicCredentials.parse_raw(auth)
+                auth_scheme, auth_string = auth.split()
+                username, password = base64.b64decode(auth_string).decode("utf-8").split(":")
+                credentials = HTTPBasicCredentials(
+                    username=username,
+                    password=password
+                )
+
+                if not verify_credentials(credentials):
+                    raise HTTPException(status_code=401, detail="Unauthorized")
+            except HTTPException:
+                response = Response(
+                    headers={"WWW-Authenticate": "Basic"},
+                    status_code=401
+                )
+                return response
+
+        response = await call_next(request)
+        return response
+
+
 # Define allowed origins (domains) that are allowed to access your API
 # origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
-# Create the FastAPI app
-app = FastAPI()
 
 # Add CORS middleware to allow requests from specified origins
 app.add_middleware(
@@ -25,6 +94,9 @@ app.add_middleware(
     allow_methods=["*"],  # You can restrict this to specific HTTP methods if needed
     allow_headers=["*"],  # You can restrict this to specific headers if needed
 )
+
+
+app.add_middleware(AuthMiddleware)
 
 
 # Dependency
