@@ -75,9 +75,17 @@ def read_posts(
     limit: int = 100,
     category: Optional[str] = None,
     keyword: Optional[str] = None,
+    tag_id: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
-    posts = crud.get_posts(db, skip=skip, limit=limit, category=category, keyword=keyword)
+    posts = crud.get_posts(
+        db,
+        skip=skip,
+        limit=limit,
+        category=category,
+        keyword=keyword,
+        tag_id=tag_id
+        )
     result_posts = []
     for post in posts:
         result = {
@@ -87,11 +95,23 @@ def read_posts(
             "title": post.title,
             "content": post.content,
             "created_at": post.created_at,
-            "tag_urls": [{"tag_name": post_tag.tag.meta_title, "url": post_tag.tag.icon_image_url} for post_tag in post.post_tags],
+            "tag_urls": [{"tag_id": post_tag.tag.id, "tag_name": post_tag.tag.meta_title, "url": post_tag.tag.icon_image_url} for post_tag in post.post_tags],
             "category": post.category
         }
         result_posts.append(result)
     return result_posts
+
+
+@app.get("/tags/{tag_id}", response_model=schemas.TagURL)
+def read_tag(tag_id: str, db: Session = Depends(get_db)):
+    tag = crud.get_tag(db, tag_id=tag_id)
+    if tag is None:
+        raise HTTPException(status_code=404, detail="Tag not found")
+    return {
+        "tag_id": tag.id,
+        "tag_name": tag.meta_title,
+        "url": tag.icon_image_url
+    }
 
 
 @app.delete("/posts/{post_id}/")

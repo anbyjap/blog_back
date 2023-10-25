@@ -39,7 +39,8 @@ def get_posts(
         skip: int = 0,
         limit: int = 100,
         category: Optional[str] = None,
-        keyword: Optional[str] = None
+        keyword: Optional[str] = None,
+        tag_id: Optional[str] = None
 ):
     # Starting the query
     query = db.query(models.Post).options(
@@ -59,6 +60,10 @@ def get_posts(
                 models.Post.content.contains(keyword)
                 )
             )
+        
+    # Filtering based on tag_id
+    if tag_id:
+        query = query.join(models.Post.post_tags).filter(models.PostTag.tag_id == tag_id)
 
     # Applying offset and limit
     posts = query.offset(skip).limit(limit).all()
@@ -100,3 +105,8 @@ def create_user_post(db: Session, item: schemas.PostCreate):
 def get_post(db: Session, post_id: int):
     """Retrieve a specific post by its ID."""
     return db.query(models.Post).filter(models.Post.post_id == post_id).first()
+
+
+def get_tag(db: Session, tag_id: int):
+    """Retrieve a specific post by its ID."""
+    return db.query(models.Tag).filter(models.Tag.id == tag_id).first()

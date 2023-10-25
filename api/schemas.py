@@ -15,6 +15,7 @@ class PostCreate(PostBase):
 
 
 class TagURL(BaseModel):
+    tag_id: str
     tag_name: str
     url: str
 
