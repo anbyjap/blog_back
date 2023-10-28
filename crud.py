@@ -26,8 +26,8 @@ def create_user(db: Session, user: schemas.UserCreate):
         user_id=str(uuid.uuid4()),
         name=user.name,
         email=user.email,
-        hashed_password=fake_hashed_password
-        )
+        hashed_password=fake_hashed_password,
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -35,12 +35,12 @@ def create_user(db: Session, user: schemas.UserCreate):
 
 
 def get_posts(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100,
-        category: Optional[str] = None,
-        keyword: Optional[str] = None,
-        tag_id: Optional[str] = None
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    category: Optional[str] = None,
+    keyword: Optional[str] = None,
+    tag_id: Optional[str] = None,
 ):
     # Starting the query
     query = db.query(models.Post).options(
@@ -57,16 +57,20 @@ def get_posts(
         query = query.filter(
             or_(
                 models.Post.title.contains(keyword),
-                models.Post.content.contains(keyword)
-                )
+                models.Post.content.contains(keyword),
             )
-        
+        )
+
     # Filtering based on tag_id
     if tag_id:
-        query = query.join(models.Post.post_tags).filter(models.PostTag.tag_id == tag_id)
+        query = query.join(models.Post.post_tags).filter(
+            models.PostTag.tag_id == tag_id
+        )
 
     # Applying offset and limit
     posts = query.offset(skip).limit(limit).all()
+
+    print(posts[0].slug)
 
     return posts
 
@@ -78,8 +82,9 @@ def create_user_post(db: Session, item: schemas.PostCreate):
         title=item.title,
         content=item.content,
         created_at=datetime.datetime.now(),
-        category=item.category
-        )
+        category=item.category,
+        slug=item.slug,
+    )
     db.add(db_post)
     db.flush()
 
@@ -92,19 +97,24 @@ def create_user_post(db: Session, item: schemas.PostCreate):
             post_tag_instance = models.PostTag(
                 post_tag_id=str(uuid.uuid4()),
                 post_id=db_post.post_id,
-                tag_id=tag_instance.id
-                )
+                tag_id=tag_instance.id,
+            )
             db.add(post_tag_instance)
-            
+
     db.commit()
     db.refresh(db_post)
 
     return db_post
 
 
-def get_post(db: Session, post_id: int):
-    """Retrieve a specific post by its ID."""
-    return db.query(models.Post).filter(models.Post.post_id == post_id).first()
+def get_post(db: Session, username: str, slug: str):
+    """Retrieve a specific post by username and slug."""
+    return (
+        db.query(models.Post)
+        .join(models.User)
+        .filter(models.User.name == username, models.Post.slug == slug)
+        .first()
+    )
 
 
 def get_tag(db: Session, tag_id: int):

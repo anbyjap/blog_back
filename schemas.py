@@ -4,7 +4,6 @@ import datetime
 
 
 class PostBase(BaseModel):
-    user_id: str | None = None
     title: str | None = None
     content: str | None = None
 
@@ -12,6 +11,7 @@ class PostBase(BaseModel):
 class PostCreate(PostBase):
     tags: List[str]
     category: str
+    slug: str
 
 
 class TagURL(BaseModel):
@@ -20,14 +20,22 @@ class TagURL(BaseModel):
     url: str
 
 
-class PostShow(PostBase):
+class PostCard(BaseModel):
     post_id: str | None = None
+    slug: str
+    title: str | None = None
     username: str
     created_at: datetime.datetime
     updated_at: str | None = None
     published_at: str | None = None
-    tag_urls: List[TagURL] | None = None
     category: str
+
+
+class PostShow(PostBase):
+    created_at: datetime.datetime
+    username: str
+    title: str | None = None
+    tag_urls: List[TagURL] | None = None
 
 
 class Post(PostBase):

@@ -143,18 +143,49 @@ def read_user(
     return db_user
 
 
-@app.post("/users/post/")
+@app.post("/post/{user_id}")
 def create_item_for_user(
+    user_id: str,
     item: schemas.PostCreate,
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
 ):
     if item.category not in ["tech", "idea"]:
         raise HTTPException(status_code=400, detail="specify category")
-    return crud.create_user_post(db=db, item=item)
+    return crud.create_user_post(db=db, user_id=user_id, item=item)
 
 
-@app.get("/posts/", response_model=list[schemas.PostShow])
+@app.get("/posts/{username}/{slug}/", response_model=schemas.PostShow)
+def get_post(
+    username: str,
+    slug: str,
+    db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+):
+    post = crud.get_post(db, username, slug)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    result = {
+        "username": post.user.name,
+        "content": post.content,
+        "post_id": post.post_id,
+        "title": post.title,
+        "created_at": post.created_at,
+        "tag_urls": [
+            {
+                "tag_id": post_tag.tag.id,
+                "tag_name": post_tag.tag.meta_title,
+                "url": post_tag.tag.icon_image_url,
+            }
+            for post_tag in post.post_tags
+        ],
+    }
+
+    return result
+
+
+@app.get("/posts/", response_model=list[schemas.PostCard])
 def read_posts(
     skip: int = 0,
     limit: int = 100,
@@ -171,20 +202,11 @@ def read_posts(
     for post in posts:
         result = {
             "username": post.user.name,
-            "user_id": post.user_id,
             "post_id": post.post_id,
             "title": post.title,
-            "content": post.content,
             "created_at": post.created_at,
-            "tag_urls": [
-                {
-                    "tag_id": post_tag.tag.id,
-                    "tag_name": post_tag.tag.meta_title,
-                    "url": post_tag.tag.icon_image_url,
-                }
-                for post_tag in post.post_tags
-            ],
             "category": post.category,
+            "slug": post.slug,
         }
         result_posts.append(result)
     return result_posts
