@@ -75,10 +75,10 @@ def get_posts(
     return posts
 
 
-def create_user_post(db: Session, item: schemas.PostCreate):
+def create_user_post(db: Session, user_id: str, item: schemas.PostCreate):
     db_post = models.Post(
         post_id=str(uuid.uuid4()),
-        user_id=item.user_id,
+        user_id=user_id,
         title=item.title,
         content=item.content,
         created_at=datetime.datetime.now(),
