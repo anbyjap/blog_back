@@ -70,8 +70,6 @@ def get_posts(
     # Applying offset and limit
     posts = query.offset(skip).limit(limit).all()
 
-    print(posts[0].slug)
-
     return posts
 
 
