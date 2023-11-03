@@ -27,3 +27,7 @@ docker-compose down --rmi all --volumes --remove-orphans
 1.  `poetry install`
 2.  `poetry shell`
 3.  `uvicorn main:app --reload`
+
+## how to write requirement.txt
+
+poetry export --without-hashes --format=requirements.txt > requirements.txt
