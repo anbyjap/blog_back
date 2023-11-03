@@ -222,6 +222,22 @@ def read_tag(
     return {"tag_id": tag.id, "tag_name": tag.meta_title, "url": tag.icon_image_url}
 
 
+@app.get("/tags/", response_model=list[schemas.TagURL])
+def read_all_tag(
+    db: Session = Depends(get_db), api_key: str = Depends(get_api_key)
+):
+    tags = crud.get_all_tag(db)
+    all_tags = []
+    for tag in tags:
+        all_tags.append(
+            {
+                "tag_id": tag.id,
+                "tag_name": tag.meta_title,
+                "url": tag.icon_image_url
+            }
+        )
+    return all_tags
+
 @app.delete("/posts/{post_id}/")
 def delete_post(
     post_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)

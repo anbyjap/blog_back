@@ -120,3 +120,8 @@ def get_post(db: Session, username: str, slug: str):
 def get_tag(db: Session, tag_id: int):
     """Retrieve a specific post by its ID."""
     return db.query(models.Tag).filter(models.Tag.id == tag_id).first()
+
+
+def get_all_tag(db: Session):
+    """Get all tags"""
+    return db.query(models.Tag).all()
