@@ -4,11 +4,12 @@ import datetime
 
 
 class PostBase(BaseModel):
-    title: str | None = None
-    content: str | None = None
+    title: str
+    content: str
 
 
 class PostCreate(PostBase):
+    emoji: str
     tags: List[str]
     category: str
     slug: str
@@ -21,6 +22,7 @@ class TagURL(BaseModel):
 
 
 class PostCard(BaseModel):
+    emoji: str
     post_id: str | None = None
     slug: str
     title: str | None = None
@@ -32,6 +34,7 @@ class PostCard(BaseModel):
 
 
 class PostShow(PostBase):
+    emoji: str
     created_at: datetime.datetime
     username: str
     title: str | None = None

@@ -79,6 +79,7 @@ def create_user_post(db: Session, user_id: str, item: schemas.PostCreate):
     db_post = models.Post(
         post_id=str(uuid.uuid4()),
         user_id=user_id,
+        emoji=item.emoji,
         title=item.title,
         content=item.content,
         created_at=datetime.datetime.now(),

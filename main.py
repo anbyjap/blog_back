@@ -168,6 +168,7 @@ def get_post(
 
     result = {
         "username": post.user.name,
+        "emoji": post.emoji,
         "content": post.content,
         "post_id": post.post_id,
         "title": post.title,
@@ -202,6 +203,7 @@ def read_posts(
     for post in posts:
         result = {
             "username": post.user.name,
+            "emoji": post.emoji,
             "post_id": post.post_id,
             "title": post.title,
             "created_at": post.created_at,

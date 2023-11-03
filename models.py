@@ -29,6 +29,7 @@ class Post(Base):
 
     post_id = Column(String, primary_key=True, index=True)
     user_id = Column(String, ForeignKey("users.user_id"))
+    emoji = Column(String, index=True)
     title = Column(String, index=True)
     meta_title = Column(String, index=True)
     slug = Column(String, index=True)
