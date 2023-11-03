@@ -32,7 +32,7 @@ swagger_creds = {admin_name: admin_password}
 # openssl rand -hex 32
 SECRET_KEY = os.environ.get("BLOG_SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 class Token(BaseModel):
@@ -41,7 +41,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserInDB(BaseModel):
@@ -112,8 +112,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    access_token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return access_token
 
 
 # Dependency
@@ -134,16 +134,17 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except JWTError:
         raise credentials_exception
-    user = get_user(db, username=token_data.username)
+    user = get_user(db, email=token_data.email)  # Use email to fetch the user
     if user is None:
         raise credentials_exception
     return user
+
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -207,7 +208,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.name}, expires_delta=access_token_expires
+        data={"sub": user.email}, expires_delta=access_token_expires  # use user.email
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -251,16 +252,16 @@ def read_user(
     return db_user
 
 
-@app.post("/post/{user_id}")
+@app.post("/post/")
 def create_item_for_user(
-    user_id: str,
     item: schemas.PostCreate,
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
+    current_user: models.User = Depends(get_current_user)
 ):
     if item.category not in ["tech", "idea"]:
         raise HTTPException(status_code=400, detail="specify category")
-    return crud.create_user_post(db=db, user_id=user_id, item=item)
+    return crud.create_user_post(db=db, user_id=current_user.user_id, item=item)
 
 
 @app.get("/posts/{username}/{slug}/", response_model=schemas.PostShow)
@@ -269,7 +270,6 @@ def get_post(
     slug: str,
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
-    current_user: models.User = Depends(get_current_user)
 ):
     post = crud.get_post(db, username, slug)
     if post is None:
