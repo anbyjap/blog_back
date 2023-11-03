@@ -94,12 +94,12 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def get_user(db: Session, username: str):
-    return crud.get_user_by_username(db, username=username)
+def get_user(db: Session, email: str):
+    return crud.get_user_by_email(db, email=email)
 
 
-def authenticate_user(db: Session, username: str, password: str):
-    user = get_user(db, username)
+def authenticate_user(db: Session, email: str, password: str):
+    user = get_user(db, email)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
@@ -269,6 +269,7 @@ def get_post(
     slug: str,
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
+    current_user: models.User = Depends(get_current_user)
 ):
     post = crud.get_post(db, username, slug)
     if post is None:
@@ -350,7 +351,7 @@ def read_all_tag(
 
 @app.delete("/posts/{post_id}/")
 def delete_post(
-    post_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key)
+    post_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key), current_user: models.User = Depends(get_current_user)
 ):
     db_post = crud.get_post(db, post_id=post_id)
     if db_post is None:
