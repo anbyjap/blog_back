@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import SecurityScopes
 from sqlalchemy.orm import Session
@@ -20,13 +20,15 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import boto3
+from botocore.exceptions import NoCredentialsError
 
 
 models.Base.metadata.create_all(bind=engine)
 
 
 # .envファイルの内容を読み込見込む
-load_dotenv()
+load_dotenv(override=True)
 
 API_KEY = os.environ.get("BLOG_API_KEY")
 admin_name = os.environ.get("BLOG_ADMIN_NAME")
@@ -369,3 +371,53 @@ def delete_post(
     db.delete(db_post)
     db.commit()
     return {"status": "success", "message": "Post deleted successfully"}
+
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=os.environ.get("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.environ.get("AWS_SECRET_ACCESS_KEY"),
+)
+
+
+@app.post("/upload_image/")
+def upload_image_to_s3(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    api_key: str = Depends(get_api_key),
+    # current_user: str = Depends(get_current_user)
+) :
+    # Check if file is an image
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Invalid file type. Must be an image.")
+
+    user_id = "aaa"
+
+    # Generate a datetime string for the filename
+    datetime_str = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{datetime_str}"
+
+    # Generate the file path
+    file_path = f"{user_id}/{filename}"
+
+    try:
+        # Read the content of the file
+        file_content = file.file.read()
+
+        # Upload file to S3 to the user's folder
+        s3_client.put_object(
+            Bucket='haruki-blog-image',
+            Key=file_path,
+            Body=file_content,
+            ContentType=file.content_type  # Set the ContentType for the uploaded file
+        )
+    except NoCredentialsError:
+        raise HTTPException(status_code=500, detail="Could not connect to S3")
+
+    # Assuming 'haruki-blog-image' is your bucket name and the region is 'us-west-2'
+    uploaded_file_url = f"https://haruki-blog-image.s3.ap-northeast-1.amazonaws.com/{file_path}"
+
+    # If you want to save the file info to your database, create an instance of your item model.
+    # You could also generate a unique file name before uploading to avoid name collisions.
+
+    return {"message": "Image uploaded successfully", "url": uploaded_file_url}
