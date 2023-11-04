@@ -42,6 +42,7 @@ def get_posts(
     db: Session,
     skip: int = 0,
     limit: int = 100,
+    user_id: Optional[str] = None,
     category: Optional[str] = None,
     keyword: Optional[str] = None,
     tag_id: Optional[str] = None,
@@ -69,6 +70,12 @@ def get_posts(
     if tag_id:
         query = query.join(models.Post.post_tags).filter(
             models.PostTag.tag_id == tag_id
+        )
+
+        # Filtering based on tag_id
+    if user_id:
+        query = query.filter(
+            models.Post.user_id == user_id
         )
 
     # Applying offset and limit

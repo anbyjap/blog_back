@@ -19,9 +19,14 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
+from dotenv import load_dotenv
 
 
 models.Base.metadata.create_all(bind=engine)
+
+
+# .envファイルの内容を読み込見込む
+load_dotenv()
 
 API_KEY = os.environ.get("BLOG_API_KEY")
 admin_name = os.environ.get("BLOG_ADMIN_NAME")
@@ -38,6 +43,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user_id: str
 
 
 class TokenData(BaseModel):
@@ -146,7 +152,6 @@ async def get_current_user(db: Session = Depends(get_db), token: str = Depends(o
     return user
 
 
-
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.url.path in ["/docs", "/openapi.json"]:
@@ -210,13 +215,16 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires  # use user.email
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "user_id": user.user_id}
 
 
-# Sample protected endpoint
-@app.get("/users/me", response_model=schemas.User)
-async def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return current_user
+@app.get("/validate")
+def validate_api_key(
+    api_key: str = Depends(get_api_key)
+):
+    # If the function `get_api_key` doesn't raise an HTTPException, the API key is valid.
+    return {"status": "success", "message": "API key is valid."}
+
 
 
 @app.post("/users/", response_model=schemas.User)
@@ -299,6 +307,7 @@ def get_post(
 def read_posts(
     skip: int = 0,
     limit: int = 100,
+    user_id: Optional[str] = None,
     category: Optional[str] = None,
     keyword: Optional[str] = None,
     tag_id: Optional[str] = None,
@@ -306,7 +315,7 @@ def read_posts(
     api_key: str = Depends(get_api_key),
 ):
     posts = crud.get_posts(
-        db, skip=skip, limit=limit, category=category, keyword=keyword, tag_id=tag_id
+        db, skip=skip, limit=limit, category=category, keyword=keyword, tag_id=tag_id, user_id=user_id
     )
     result_posts = []
     for post in posts:
