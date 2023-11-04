@@ -127,6 +127,15 @@ def get_post(db: Session, username: str, slug: str):
     )
 
 
+def get_post_by_id(db: Session, post_id: str):
+    """Retrieve a specific post by username and slug."""
+    return (
+        db.query(models.Post)
+        .filter(models.Post.post_id == post_id)
+        .first()
+    )
+
+
 def get_tag(db: Session, tag_id: int):
     """Retrieve a specific post by its ID."""
     return db.query(models.Tag).filter(models.Tag.id == tag_id).first()

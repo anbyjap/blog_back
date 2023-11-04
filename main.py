@@ -358,11 +358,12 @@ def read_all_tag(
         )
     return all_tags
 
+
 @app.delete("/posts/{post_id}/")
 def delete_post(
     post_id: str, db: Session = Depends(get_db), api_key: str = Depends(get_api_key), current_user: models.User = Depends(get_current_user)
 ):
-    db_post = crud.get_post(db, post_id=post_id)
+    db_post = crud.get_post_by_id(db, post_id=post_id)
     if db_post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     db.delete(db_post)
